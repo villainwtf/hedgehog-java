@@ -1,0 +1,61 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'java'
+    id 'maven-publish'
+}
+
+def cmdGitHash = 'git rev-parse --short HEAD'.execute().getText().trim()
+def cmdGitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().getText().trim()
+
+ext {
+    gitHash = cmdGitHash
+    gitBranch = cmdGitBranch
+}
+
+group = 'wtf.villain'
+version = gitHash
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+assemble.dependsOn shadowJar
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+
+    implementation 'org.jetbrains:annotations:24.1.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+}
+
+shadowJar {
+    archiveClassifier.set('')
+
+    relocate 'org.intellij.lang.annotations', 'wtf.villain.hedgehog.lib.intellij'
+    relocate 'org.jetbrains.annotations', 'wtf.villain.hedgehog.lib.jetbrains'
+    relocate 'okhttp3', 'wtf.villain.hedgehog.lib.okhttp3'
+    relocate 'okio', 'wtf.villain.hedgehog.lib.okio'
+    relocate 'com.google.gson', 'wtf.villain.hedgehog.lib.gson'
+}
+
+publishing {
+    publications {
+        //noinspection all
+        maven(MavenPublication) {
+            //noinspection all
+            artifact shadowJar
+        }
+    }
+}
