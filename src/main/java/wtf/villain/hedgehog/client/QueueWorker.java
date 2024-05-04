@@ -99,7 +99,7 @@ public class QueueWorker {
 
     private void dispatchRequest(@NotNull QueuedRequest request) {
         var method = request.method();
-        var url = baseUrl + request.endpoint();
+        var url = baseUrl + "/" + request.endpoint();
 
         var body = request.body();
         var httpBody = RequestBody.create(body.toString(), MediaType.parse("application/json"));
