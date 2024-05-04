@@ -42,12 +42,6 @@ dependencies {
 
 shadowJar {
     archiveClassifier.set('')
-
-    relocate 'org.intellij.lang.annotations', 'wtf.villain.hedgehog.lib.intellij'
-    relocate 'org.jetbrains.annotations', 'wtf.villain.hedgehog.lib.jetbrains'
-    relocate 'okhttp3', 'wtf.villain.hedgehog.lib.okhttp3'
-    relocate 'okio', 'wtf.villain.hedgehog.lib.okio'
-    relocate 'com.google.gson', 'wtf.villain.hedgehog.lib.gson'
 }
 
 publishing {
