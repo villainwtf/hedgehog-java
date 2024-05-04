@@ -11,6 +11,7 @@ import wtf.villain.hedgehog.data.featureflag.FeatureFlag;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagCollection;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagData;
 import wtf.villain.hedgehog.data.person.Person;
+import wtf.villain.hedgehog.data.person.PropertyFilter;
 import wtf.villain.hedgehog.util.Json;
 
 import java.util.HashMap;
@@ -27,7 +28,9 @@ public interface FeatureFlagRequest {
         var json = Json.builder()
               .add("api_key", posthog.apiKey())
               .add("distinct_id", person.distinctId())
-              .add("person_properties", Json.of(person.buildProperties(true, true, false)))
+              .add("person_properties", Json.of(person.buildProperties(PropertyFilter.create()
+                    .includePersonProperties(true)
+                    .includeIp(true))))
               .build();
 
         var future = new CompletableFuture<JsonElement>();

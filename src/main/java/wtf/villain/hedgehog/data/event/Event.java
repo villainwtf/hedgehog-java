@@ -6,6 +6,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import wtf.villain.hedgehog.client.PosthogClient;
 import wtf.villain.hedgehog.data.person.Person;
+import wtf.villain.hedgehog.data.person.PropertyFilter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +49,11 @@ public class Event {
         var properties = new HashMap<String, JsonElement>();
         this.properties.ifPresent(properties::putAll);
 
-        var personEventProperties = person.buildProperties(isIdentify, true, true);
+        var personEventProperties = person.buildProperties(PropertyFilter.create()
+              .includePersonProperties(isIdentify)
+              .useSetSyntax(isIdentify)
+              .includeIp(true)
+              .includeFeatureFlags(true));
         properties.putAll(personEventProperties);
 
         return properties;

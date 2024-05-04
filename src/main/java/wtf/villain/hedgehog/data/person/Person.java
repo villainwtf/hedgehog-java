@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagCollection;
+import wtf.villain.hedgehog.util.Json;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,19 +45,24 @@ public class Person {
 
     @ApiStatus.Internal
     @NotNull
-    public Map<String, JsonElement> buildProperties(
-          boolean includePersonProperties, boolean includeIp, boolean includeFeatureFlags) {
+    public Map<String, JsonElement> buildProperties(@NotNull PropertyFilter filter) {
         var properties = new HashMap<String, JsonElement>();
 
-        if (includePersonProperties) {
-            this.properties.ifPresent(properties::putAll);
+        if (filter.includePersonProperties()) {
+            this.properties.ifPresent(props -> {
+                if (filter.useSetSyntax()) {
+                    properties.put("$set", Json.of(props));
+                } else {
+                    properties.putAll(props);
+                }
+            });
         }
 
-        if (includeIp) {
+        if (filter.includeIp()) {
             clientIp.ifPresent(ip -> properties.put("$ip", new JsonPrimitive(ip)));
         }
 
-        if (includeFeatureFlags) {
+        if (filter.includeFeatureFlags()) {
             storedFeatureFlags.ifPresent(flags -> {
                 flags.forEach((key, value) -> properties.put("$feature/" + key, new JsonPrimitive(value.variantAsString())));
             });
