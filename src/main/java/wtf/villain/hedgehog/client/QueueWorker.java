@@ -102,7 +102,9 @@ public class QueueWorker {
         var url = baseUrl + "/" + request.endpoint();
 
         var body = request.body();
-        var httpBody = RequestBody.create(body.toString(), MediaType.parse("application/json"));
+        var httpBody = body.isJsonNull()
+              ? null
+              : RequestBody.create(body.toString(), MediaType.parse("application/json"));
 
         var httpRequest = new Request.Builder()
               .method(method, httpBody)

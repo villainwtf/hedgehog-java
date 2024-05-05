@@ -23,3 +23,5 @@ Please note the following important points:
 - [x] Include feature flag information when capturing events
 - [x] Feature flag called event
 - [x] Override GeoIP information when capturing events based on IP address
+- [x] Early access features retrieval
+- [x] Early access feature enrollment

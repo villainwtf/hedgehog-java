@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 public record QueuedRequest(@NotNull PosthogRequest request,
                             @Nullable String otherMethod,
                             @Nullable String otherEndpoint,
+                            @Nullable String endpointExtension,
                             @NotNull JsonElement body,
                             boolean immediate,
                             @NotNull Optional<CompletableFuture<JsonElement>> responseFuture) {
@@ -21,7 +22,7 @@ public record QueuedRequest(@NotNull PosthogRequest request,
                          @NotNull JsonElement body,
                          boolean immediate,
                          @NotNull Optional<CompletableFuture<JsonElement>> responseFuture) {
-        this(request, null, null, body, immediate, responseFuture);
+        this(request, null, null, null, body, immediate, responseFuture);
 
         if (request.method() == null || request.endpoint() == null) {
             throw new IllegalArgumentException("PosthogRequest must have a method and endpoint defined.");
@@ -46,7 +47,7 @@ public record QueuedRequest(@NotNull PosthogRequest request,
     @NotNull
     public String endpoint() {
         if (request.endpoint() != null) {
-            return request.endpoint();
+            return request.endpoint() + (request.hasExtension() ? endpointExtension : "");
         }
 
         return Objects.requireNonNull(otherEndpoint);
