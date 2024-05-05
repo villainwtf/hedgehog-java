@@ -2,14 +2,13 @@ package wtf.villain.hedgehog.client;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import wtf.villain.hedgehog.client.request.EventRequest;
-import wtf.villain.hedgehog.client.request.FeatureFlagRequest;
-import wtf.villain.hedgehog.client.request.IdentifyRequest;
-import wtf.villain.hedgehog.client.request.ViewRequest;
+import wtf.villain.hedgehog.client.request.*;
+import wtf.villain.hedgehog.data.earlyaccess.EarlyAccessFeature;
 import wtf.villain.hedgehog.data.event.Event;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagCollection;
 import wtf.villain.hedgehog.data.person.Person;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -62,5 +61,14 @@ public class PosthogClient {
 
     public void enqueueScreenViewEvent(@NotNull Person person, @NotNull String screenName) {
         ViewRequest.screenView(this, person, screenName);
+    }
+
+    @NotNull
+    public CompletableFuture<List<EarlyAccessFeature>> earlyAccessFeatures() {
+        return EarlyAccessRequest.earlyAccessFeatures(this);
+    }
+
+    public void enqueueEarlyAccessFeatureEnrollment(@NotNull Person person, @NotNull String feature, boolean isEnrolled) {
+        EarlyAccessRequest.enqueueEarlyAccessFeatureEnrollment(this, person, feature, isEnrolled);
     }
 }
