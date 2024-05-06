@@ -7,6 +7,7 @@ import wtf.villain.hedgehog.data.earlyaccess.EarlyAccessFeature;
 import wtf.villain.hedgehog.data.event.Event;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagCollection;
 import wtf.villain.hedgehog.data.person.Person;
+import wtf.villain.hedgehog.data.toolbar.ToolbarFeatureFlag;
 
 import java.util.List;
 import java.util.Optional;
@@ -70,5 +71,15 @@ public class PosthogClient {
 
     public void enqueueEarlyAccessFeatureEnrollment(@NotNull Person person, @NotNull String feature, boolean isEnrolled) {
         EarlyAccessRequest.enqueueEarlyAccessFeatureEnrollment(this, person, feature, isEnrolled);
+    }
+
+    @NotNull
+    public CompletableFuture<Void> updateEarlyAccessFeatureEnrollmentImmediately(@NotNull Person person, @NotNull String feature, boolean isEnrolled) {
+        return EarlyAccessRequest.updateEarlyAccessFeatureEnrollmentImmediately(this, person, feature, isEnrolled);
+    }
+
+    @NotNull
+    public CompletableFuture<List<ToolbarFeatureFlag>> toolbarGetFeatureFlags(@NotNull String groups, @NotNull String temporaryToken) {
+        return ToolbarRequest.toolbarGetFeatureFlags(this, groups, temporaryToken);
     }
 }

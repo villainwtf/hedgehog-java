@@ -25,3 +25,4 @@ Please note the following important points:
 - [x] Override GeoIP information when capturing events based on IP address
 - [x] Early access features retrieval
 - [x] Early access feature enrollment
+- [x] Toolbar specific API: Feature flags (ability to retrieve all variants, groups, etc.)

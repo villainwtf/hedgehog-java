@@ -3,10 +3,12 @@ package wtf.villain.hedgehog.data.earlyaccess;
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import org.jetbrains.annotations.ApiStatus;
 
 @SuppressWarnings("unused")
 @Getter
+@ToString
 @RequiredArgsConstructor
 public class EarlyAccessFeature {
 

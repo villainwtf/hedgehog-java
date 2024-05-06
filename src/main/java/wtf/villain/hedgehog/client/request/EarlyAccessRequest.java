@@ -36,6 +36,20 @@ public interface EarlyAccessRequest {
 
     @ApiStatus.Internal
     @NotNull
+    static CompletableFuture<Void> updateEarlyAccessFeatureEnrollmentImmediately(@NotNull PosthogClient posthog, @NotNull Person person, @NotNull String feature, boolean isEnrolled) {
+        return Event.builder()
+              .name("$feature_enrollment_update")
+              .property("$feature_flag", new JsonPrimitive(feature))
+              .property("$feature_enrollment", new JsonPrimitive(isEnrolled))
+              .property("$set", Json.builder()
+                    .add("$feature_enrollment/" + feature, new JsonPrimitive(isEnrolled))
+                    .build())
+              .build()
+              .capture(person, posthog);
+    }
+
+    @ApiStatus.Internal
+    @NotNull
     static CompletableFuture<List<EarlyAccessFeature>> earlyAccessFeatures(@NotNull PosthogClient posthog) {
         var future = new CompletableFuture<JsonElement>();
 

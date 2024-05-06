@@ -38,7 +38,7 @@ public interface EventRequest {
         posthog.queueWorker().enqueue(new QueuedRequest(
               PosthogRequest.CAPTURE_EVENT,
               eventJson,
-              false,
+              true,
               Optional.of(future)));
 
         return future.thenApplyAsync(json -> null);
