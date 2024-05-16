@@ -2,6 +2,7 @@ package wtf.villain.hedgehog.client;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import wtf.villain.hedgehog.client.modifier.RequestModifier;
 
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ public class PosthogClientBuilder {
 
     private Optional<String> baseUrl = Optional.empty();
     private Optional<String> apiKey = Optional.empty();
+    private Optional<RequestModifier> requestModifier = Optional.empty();
 
     protected PosthogClientBuilder() {}
 
@@ -27,12 +29,23 @@ public class PosthogClientBuilder {
         return this;
     }
 
+    @Contract("_ -> this")
+    @NotNull
+    public PosthogClientBuilder requestModifier(@NotNull RequestModifier requestModifier) {
+        this.requestModifier = Optional.of(requestModifier);
+        return this;
+    }
+
     @NotNull
     public PosthogClient build() {
         var baseUrl = this.baseUrl.orElseThrow(() -> new IllegalStateException("Base URL is required"));
         var apiKey = this.apiKey.orElseThrow(() -> new IllegalStateException("API Key is required"));
 
-        return new PosthogClient(baseUrl, apiKey);
+        var client = new PosthogClient(baseUrl, apiKey);
+
+        requestModifier.ifPresent(client::setRequestModifier);
+
+        return client;
     }
 
 }

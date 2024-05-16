@@ -26,3 +26,6 @@ Please note the following important points:
 - [x] Early access features retrieval
 - [x] Early access feature enrollment
 - [x] Toolbar specific API: Feature flags (ability to retrieve all variants, groups, etc.)
+
+## Additional Features
+- [x] Hook that allows modifying each http request before it is sent

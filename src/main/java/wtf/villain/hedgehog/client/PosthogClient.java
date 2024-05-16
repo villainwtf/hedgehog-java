@@ -2,6 +2,8 @@ package wtf.villain.hedgehog.client;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import wtf.villain.hedgehog.client.modifier.RequestModifier;
 import wtf.villain.hedgehog.client.request.*;
 import wtf.villain.hedgehog.data.earlyaccess.EarlyAccessFeature;
 import wtf.villain.hedgehog.data.event.Event;
@@ -22,16 +24,24 @@ public class PosthogClient {
         return new PosthogClientBuilder();
     }
 
+    private final String baseUrl;
     private final String apiKey;
+
     private final QueueWorker queueWorker;
+    private RequestModifier requestModifier;
 
     protected PosthogClient(@NotNull String baseUrl, @NotNull String apiKey) {
+        this.baseUrl = baseUrl;
         this.apiKey = apiKey;
-        this.queueWorker = new QueueWorker(baseUrl);
+        this.queueWorker = new QueueWorker(this);
     }
 
     public void shutdown() {
         queueWorker.shutdown();
+    }
+
+    public void setRequestModifier(@Nullable RequestModifier requestModifier) {
+        this.requestModifier = requestModifier;
     }
 
     public void enqueueEvent(@NotNull Event event, @NotNull Person person) {

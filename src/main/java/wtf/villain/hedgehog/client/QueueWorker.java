@@ -17,14 +17,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @SuppressWarnings("unused")
 public class QueueWorker {
 
-    private final String baseUrl;
+    private final PosthogClient posthogClient;
     private final OkHttpClient client;
 
     private final Queue<QueuedRequest> queue = new ConcurrentLinkedQueue<>();
     private final Thread thread;
 
-    protected QueueWorker(@NotNull String baseUrl) {
-        this.baseUrl = baseUrl;
+    protected QueueWorker(@NotNull PosthogClient posthogClient) {
+        this.posthogClient = posthogClient;
         this.client = new OkHttpClient();
 
         thread = new Thread(this::work);
@@ -99,19 +99,29 @@ public class QueueWorker {
 
     private void dispatchRequest(@NotNull QueuedRequest request) {
         var method = request.method();
-        var url = baseUrl + "/" + request.endpoint();
+        var url = posthogClient.baseUrl() + "/" + request.endpoint();
 
         var body = request.body();
         var httpBody = body.isJsonNull()
               ? null
               : RequestBody.create(body.toString(), MediaType.parse("application/json"));
 
-        var httpRequest = new Request.Builder()
+        var httpRequestBuilder = new Request.Builder()
               .method(method, httpBody)
               .url(url)
               .header("Content-Type", "application/json")
-              .header("Accept", "application/json")
-              .build();
+              .header("Accept", "application/json");
+
+        var modifier = posthogClient.requestModifier();
+        if (modifier != null) {
+            httpRequestBuilder = modifier.modify(httpRequestBuilder);
+
+            if (httpRequestBuilder == null) {
+                return;
+            }
+        }
+
+        var httpRequest = httpRequestBuilder.build();
 
         client.newCall(httpRequest).enqueue(new Callback() {
             @Override
