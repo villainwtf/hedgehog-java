@@ -12,7 +12,9 @@ import wtf.villain.hedgehog.util.Json;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 @SuppressWarnings("unused")
 public class QueueWorker {
@@ -21,31 +23,44 @@ public class QueueWorker {
     private final OkHttpClient client;
 
     private final Queue<QueuedRequest> queue = new ConcurrentLinkedQueue<>();
-    private final Thread thread;
+    private final BlockingQueue<QueuedRequest> immediateQueue = new LinkedBlockingDeque<>();
+    private final Thread queueThread, immediateThread;
 
     protected QueueWorker(@NotNull PosthogClient posthogClient) {
         this.posthogClient = posthogClient;
         this.client = new OkHttpClient();
 
-        thread = new Thread(this::work);
-        thread.setDaemon(true);
-        thread.setName("hedgehog-queue-worker");
-        thread.start();
+        queueThread = new Thread(this::work);
+        queueThread.setDaemon(true);
+        queueThread.setName("hedgehog-queue-worker");
+        queueThread.start();
+
+        immediateThread = new Thread(this::workImmediate);
+        immediateThread.setDaemon(true);
+        immediateThread.setName("hedgehog-immediate-queue-worker");
+        immediateThread.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            thread.interrupt();
+            queueThread.interrupt();
+            immediateThread.interrupt();
             flushQueue();
         }));
     }
 
     protected void shutdown() {
-        thread.interrupt();
+        queueThread.interrupt();
+        immediateThread.interrupt();
         flushQueue();
         client.dispatcher().executorService().shutdown();
     }
 
     @ApiStatus.Internal
     public void enqueue(@NotNull QueuedRequest request) {
+        if (request.immediate()) {
+            immediateQueue.add(request);
+            return;
+        }
+
         queue.add(request);
     }
 
@@ -56,6 +71,17 @@ public class QueueWorker {
 
             try {
                 Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+    }
+
+    private void workImmediate() {
+        while (!Thread.interrupted()) {
+            try {
+                var request = immediateQueue.take();
+                dispatchRequest(request);
             } catch (InterruptedException e) {
                 break;
             }
