@@ -13,19 +13,19 @@ public interface ViewRequest {
     @ApiStatus.Internal
     static void pageView(@NotNull PosthogClient posthog, @NotNull Person person, @NotNull String title) {
         Event.builder()
-              .name("$pageview")
-              .property("title", new JsonPrimitive(title))
-              .build()
-              .enqueue(person, posthog);
+            .name("$pageview")
+            .property("title", new JsonPrimitive(title))
+            .build()
+            .enqueue(person, posthog);
     }
 
     @ApiStatus.Internal
     static void screenView(@NotNull PosthogClient posthog, @NotNull Person person, @NotNull String screenName) {
         Event.builder()
-              .name("$screen")
-              .property("$screen_name", new JsonPrimitive(screenName))
-              .build()
-              .enqueue(person, posthog);
+            .name("$screen")
+            .property("$screen_name", new JsonPrimitive(screenName))
+            .build()
+            .enqueue(person, posthog);
     }
 
 }

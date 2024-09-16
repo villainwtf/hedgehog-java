@@ -56,10 +56,10 @@ public class PosthogClient {
     @NotNull
     public CompletableFuture<FeatureFlagCollection> featureFlags(@NotNull Person person) {
         return FeatureFlagRequest.evaluateFeatureFlags(this, person)
-              .thenApply(collection -> {
-                  person.storedFeatureFlags(Optional.of(collection));
-                  return collection;
-              });
+            .thenApply(collection -> {
+                person.storedFeatureFlags(Optional.of(collection));
+                return collection;
+            });
     }
 
     public void identify(@NotNull Person person) {

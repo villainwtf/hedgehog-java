@@ -31,29 +31,29 @@ public record FeatureFlag(@NotNull FeatureFlagData variant,
     @NotNull
     public Optional<String> payloadAsString() {
         return payload
-              .filter(d -> d.type() == FeatureFlagDataType.STRING)
-              .map(d -> d.value().getAsString());
+            .filter(d -> d.type() == FeatureFlagDataType.STRING)
+            .map(d -> d.value().getAsString());
     }
 
     @NotNull
     public Optional<Boolean> payloadAsBoolean() {
         return payload
-              .filter(d -> d.type() == FeatureFlagDataType.BOOLEAN)
-              .map(d -> d.value().getAsBoolean());
+            .filter(d -> d.type() == FeatureFlagDataType.BOOLEAN)
+            .map(d -> d.value().getAsBoolean());
     }
 
     @NotNull
     public Optional<Integer> payloadAsInteger() {
         return payload
-              .filter(d -> d.type() == FeatureFlagDataType.INTEGER)
-              .map(d -> d.value().getAsInt());
+            .filter(d -> d.type() == FeatureFlagDataType.INTEGER)
+            .map(d -> d.value().getAsInt());
     }
 
     @NotNull
     public Optional<JsonElement> payloadAsJson() {
         return payload
-              .filter(d -> d.type() == FeatureFlagDataType.JSON)
-              .map(FeatureFlagData::value);
+            .filter(d -> d.type() == FeatureFlagDataType.JSON)
+            .map(FeatureFlagData::value);
     }
 
 }

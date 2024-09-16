@@ -53,9 +53,9 @@ public class EventBuilder {
         var name = this.name.orElseThrow(() -> new IllegalStateException("Event name must be set"));
 
         return new Event(
-              name,
-              properties.isEmpty() ? Optional.empty() : Optional.of(properties),
-              isIdentify
+            name,
+            properties.isEmpty() ? Optional.empty() : Optional.of(properties),
+            isIdentify
         );
     }
 

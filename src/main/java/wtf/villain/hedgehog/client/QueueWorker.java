@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import okhttp3.*;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import wtf.villain.hedgehog.client.error.PosthogRequestException;
 import wtf.villain.hedgehog.client.internal.PosthogRequest;
 import wtf.villain.hedgehog.client.internal.QueuedRequest;
 import wtf.villain.hedgehog.util.Json;
@@ -12,9 +13,7 @@ import wtf.villain.hedgehog.util.Json;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
 @SuppressWarnings("unused")
 public class QueueWorker {
@@ -23,8 +22,7 @@ public class QueueWorker {
     private final OkHttpClient client;
 
     private final Queue<QueuedRequest> queue = new ConcurrentLinkedQueue<>();
-    private final BlockingQueue<QueuedRequest> immediateQueue = new LinkedBlockingDeque<>();
-    private final Thread queueThread, immediateThread;
+    private final Thread queueThread;
 
     protected QueueWorker(@NotNull PosthogClient posthogClient) {
         this.posthogClient = posthogClient;
@@ -35,29 +33,22 @@ public class QueueWorker {
         queueThread.setName("hedgehog-queue-worker");
         queueThread.start();
 
-        immediateThread = new Thread(this::workImmediate);
-        immediateThread.setDaemon(true);
-        immediateThread.setName("hedgehog-immediate-queue-worker");
-        immediateThread.start();
-
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             queueThread.interrupt();
-            immediateThread.interrupt();
             flushQueue();
         }));
     }
 
     protected void shutdown() {
         queueThread.interrupt();
-        immediateThread.interrupt();
         flushQueue();
         client.dispatcher().executorService().shutdown();
     }
 
     @ApiStatus.Internal
     public void enqueue(@NotNull QueuedRequest request) {
-        if (request.immediate()) {
-            immediateQueue.add(request);
+        if (request.immediate() || request.request() != PosthogRequest.CAPTURE_EVENT) {
+            dispatchRequest(request);
             return;
         }
 
@@ -77,30 +68,12 @@ public class QueueWorker {
         }
     }
 
-    private void workImmediate() {
-        while (!Thread.interrupted()) {
-            try {
-                var request = immediateQueue.take();
-                dispatchRequest(request);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
-    }
-
     private void flushQueue() {
         var batchCapture = new ArrayList<QueuedRequest>();
 
-        while (!queue.isEmpty()) {
-            var request = queue.poll();
-
-            if (request != null) {
-                if (request.immediate() || request.request() != PosthogRequest.CAPTURE_EVENT) {
-                    dispatchRequest(request);
-                } else {
-                    batchCapture.add(request);
-                }
-            }
+        QueuedRequest queued;
+        while ((queued = queue.poll()) != null) {
+            batchCapture.add(queued);
         }
 
         if (!batchCapture.isEmpty()) {
@@ -108,16 +81,16 @@ public class QueueWorker {
             var apiKey = batchCapture.get(0).body().getAsJsonObject().get("api_key").getAsString();
 
             var json = Json.builder()
-                  .add("api_key", apiKey)
-                  .add("batch", Json
-                        .array()
-                        .use(array -> batchCapture.forEach(request -> array.add(request.body()))))
-                  .build();
+                .add("api_key", apiKey)
+                .add("batch", Json
+                    .array()
+                    .use(array -> batchCapture.forEach(request -> array.add(request.body()))))
+                .build();
 
             var request = new QueuedRequest(
-                  PosthogRequest.CAPTURE_BATCH,
-                  json,
-                  false);
+                PosthogRequest.CAPTURE_BATCH,
+                json,
+                false);
 
             dispatchRequest(request);
         }
@@ -129,14 +102,14 @@ public class QueueWorker {
 
         var body = request.body();
         var httpBody = body.isJsonNull()
-              ? null
-              : RequestBody.create(body.toString(), MediaType.parse("application/json"));
+            ? null
+            : RequestBody.create(body.toString(), MediaType.parse("application/json"));
 
         var httpRequestBuilder = new Request.Builder()
-              .method(method, httpBody)
-              .url(url)
-              .header("Content-Type", "application/json")
-              .header("Accept", "application/json");
+            .method(method, httpBody)
+            .url(url)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json");
 
         var modifier = posthogClient.requestModifier();
         if (modifier != null) {
@@ -153,7 +126,7 @@ public class QueueWorker {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 request.responseFuture().ifPresent(future ->
-                      future.completeExceptionally(e));
+                    future.completeExceptionally(e));
             }
 
             @Override
@@ -166,10 +139,10 @@ public class QueueWorker {
                     var jsonBody = new Gson().fromJson(body.charStream(), JsonElement.class);
 
                     request.responseFuture().ifPresent(future ->
-                          future.complete(jsonBody));
+                        future.complete(jsonBody));
                 } else {
                     request.responseFuture().ifPresent(future ->
-                          future.completeExceptionally(new IOException("HTTP " + code + ": " + body)));
+                        future.completeExceptionally(new PosthogRequestException(code, body)));
                 }
             }
         });

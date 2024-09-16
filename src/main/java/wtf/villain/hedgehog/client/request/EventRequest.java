@@ -23,9 +23,9 @@ public interface EventRequest {
         var eventJson = getEventJson(posthog, event, person);
 
         posthog.queueWorker().enqueue(new QueuedRequest(
-              PosthogRequest.CAPTURE_EVENT,
-              eventJson,
-              false));
+            PosthogRequest.CAPTURE_EVENT,
+            eventJson,
+            false));
     }
 
     @ApiStatus.Internal
@@ -36,10 +36,10 @@ public interface EventRequest {
         var future = new CompletableFuture<JsonElement>();
 
         posthog.queueWorker().enqueue(new QueuedRequest(
-              PosthogRequest.CAPTURE_EVENT,
-              eventJson,
-              true,
-              Optional.of(future)));
+            PosthogRequest.CAPTURE_EVENT,
+            eventJson,
+            true,
+            Optional.of(future)));
 
         return future.thenApplyAsync(json -> null);
     }
@@ -48,13 +48,13 @@ public interface EventRequest {
     @NotNull
     private static JsonElement getEventJson(@NotNull PosthogClient posthog, @NotNull Event event, @NotNull Person person) {
         return Json.builder()
-              .add("api_key", posthog.apiKey())
-              .add("uuid", UUID.randomUUID().toString())
-              .add("timestamp", Instant.now().toString())
-              .add("distinct_id", person.distinctId())
-              .add("event", event.name())
-              .add("properties", Json.of(event.buildProperties(person)))
-              .build();
+            .add("api_key", posthog.apiKey())
+            .add("uuid", UUID.randomUUID().toString())
+            .add("timestamp", Instant.now().toString())
+            .add("distinct_id", person.distinctId())
+            .add("event", event.name())
+            .add("properties", Json.of(event.buildProperties(person)))
+            .build();
     }
 
 }

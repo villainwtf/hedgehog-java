@@ -26,20 +26,20 @@ public interface FeatureFlagRequest {
     @NotNull
     static CompletableFuture<FeatureFlagCollection> evaluateFeatureFlags(@NotNull PosthogClient posthog, @NotNull Person person) {
         var json = Json.builder()
-              .add("api_key", posthog.apiKey())
-              .add("distinct_id", person.distinctId())
-              .add("person_properties", Json.of(person.buildProperties(PropertyFilter.create()
-                    .includePersonProperties(true)
-                    .includeIp(true))))
-              .build();
+            .add("api_key", posthog.apiKey())
+            .add("distinct_id", person.distinctId())
+            .add("person_properties", Json.of(person.buildProperties(PropertyFilter.create()
+                .includePersonProperties(true)
+                .includeIp(true))))
+            .build();
 
         var future = new CompletableFuture<JsonElement>();
 
         posthog.queueWorker().enqueue(new QueuedRequest(
-              PosthogRequest.EVALUATE_FEATURE_FLAGS,
-              json,
-              true,
-              Optional.of(future)
+            PosthogRequest.EVALUATE_FEATURE_FLAGS,
+            json,
+            true,
+            Optional.of(future)
         ));
 
         return future.thenApplyAsync(element -> {
@@ -55,8 +55,8 @@ public interface FeatureFlagRequest {
                 var payload = response.featureFlagPayloads.get(key);
 
                 flags.put(key, new FeatureFlag(
-                      new FeatureFlagData(value),
-                      payload == null ? Optional.empty() : Optional.of(new FeatureFlagData(payload))
+                    new FeatureFlagData(value),
+                    payload == null ? Optional.empty() : Optional.of(new FeatureFlagData(payload))
                 ));
             });
 

@@ -24,28 +24,28 @@ public interface EarlyAccessRequest {
     @ApiStatus.Internal
     static void enqueueEarlyAccessFeatureEnrollment(@NotNull PosthogClient posthog, @NotNull Person person, @NotNull String feature, boolean isEnrolled) {
         Event.builder()
-              .name("$feature_enrollment_update")
-              .property("$feature_flag", new JsonPrimitive(feature))
-              .property("$feature_enrollment", new JsonPrimitive(isEnrolled))
-              .property("$set", Json.builder()
-                    .add("$feature_enrollment/" + feature, new JsonPrimitive(isEnrolled))
-                    .build())
-              .build()
-              .enqueue(person, posthog);
+            .name("$feature_enrollment_update")
+            .property("$feature_flag", new JsonPrimitive(feature))
+            .property("$feature_enrollment", new JsonPrimitive(isEnrolled))
+            .property("$set", Json.builder()
+                .add("$feature_enrollment/" + feature, new JsonPrimitive(isEnrolled))
+                .build())
+            .build()
+            .enqueue(person, posthog);
     }
 
     @ApiStatus.Internal
     @NotNull
     static CompletableFuture<Void> updateEarlyAccessFeatureEnrollmentImmediately(@NotNull PosthogClient posthog, @NotNull Person person, @NotNull String feature, boolean isEnrolled) {
         return Event.builder()
-              .name("$feature_enrollment_update")
-              .property("$feature_flag", new JsonPrimitive(feature))
-              .property("$feature_enrollment", new JsonPrimitive(isEnrolled))
-              .property("$set", Json.builder()
-                    .add("$feature_enrollment/" + feature, new JsonPrimitive(isEnrolled))
-                    .build())
-              .build()
-              .capture(person, posthog);
+            .name("$feature_enrollment_update")
+            .property("$feature_flag", new JsonPrimitive(feature))
+            .property("$feature_enrollment", new JsonPrimitive(isEnrolled))
+            .property("$set", Json.builder()
+                .add("$feature_enrollment/" + feature, new JsonPrimitive(isEnrolled))
+                .build())
+            .build()
+            .capture(person, posthog);
     }
 
     @ApiStatus.Internal
@@ -54,13 +54,13 @@ public interface EarlyAccessRequest {
         var future = new CompletableFuture<JsonElement>();
 
         posthog.queueWorker().enqueue(new QueuedRequest(
-              PosthogRequest.GET_EARLY_ACCESS_FEATURES,
-              null,
-              null,
-              "?api_key=" + posthog.apiKey(),
-              JsonNull.INSTANCE,
-              true,
-              Optional.of(future)
+            PosthogRequest.GET_EARLY_ACCESS_FEATURES,
+            null,
+            null,
+            "?api_key=" + posthog.apiKey(),
+            JsonNull.INSTANCE,
+            true,
+            Optional.of(future)
         ));
 
         return future.thenApplyAsync(element -> {

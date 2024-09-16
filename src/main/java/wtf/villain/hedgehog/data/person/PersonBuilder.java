@@ -14,6 +14,7 @@ public class PersonBuilder {
     private Optional<String> distinctId = Optional.empty();
     private final Map<String, JsonElement> properties = new HashMap<>();
     private Optional<String> clientIp = Optional.empty();
+    private boolean alwaysIncludePropertiesInEvents = false;
 
     @Contract("_ -> this")
     @NotNull
@@ -43,14 +44,25 @@ public class PersonBuilder {
         return this;
     }
 
+    @Contract("_ -> this")
+    @NotNull
+    public PersonBuilder alwaysIncludePropertiesInEvents(boolean alwaysIncludePropertiesInEvents) {
+        this.alwaysIncludePropertiesInEvents = alwaysIncludePropertiesInEvents;
+        return this;
+    }
+
     @NotNull
     public Person build() {
         var distinctId = this.distinctId.orElseThrow(() -> new IllegalStateException("Distinct ID is required"));
 
-        return new Person(
-              distinctId,
-              properties.isEmpty() ? Optional.empty() : Optional.of(properties),
-              clientIp
+        var person = new Person(
+            distinctId,
+            properties.isEmpty() ? Optional.empty() : Optional.of(properties),
+            clientIp
         );
+
+        person.setAlwaysIncludePropertiesInEvents(alwaysIncludePropertiesInEvents);
+
+        return person;
     }
 }

@@ -50,10 +50,10 @@ public class Event {
         this.properties.ifPresent(properties::putAll);
 
         var personEventProperties = person.buildProperties(PropertyFilter.create()
-              .includePersonProperties(isIdentify)
-              .useSetSyntax(isIdentify)
-              .includeIp(true)
-              .includeFeatureFlags(true));
+            .includePersonProperties(isIdentify || person.alwaysIncludePropertiesInEvents())
+            .useSetSyntax(isIdentify)
+            .includeIp(true)
+            .includeFeatureFlags(true));
         properties.putAll(personEventProperties);
 
         return properties;

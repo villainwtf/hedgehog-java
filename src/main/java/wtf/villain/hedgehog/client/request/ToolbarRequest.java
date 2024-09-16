@@ -22,13 +22,13 @@ public interface ToolbarRequest {
         var future = new CompletableFuture<JsonElement>();
 
         posthog.queueWorker().enqueue(new QueuedRequest(
-              PosthogRequest.OTHER,
-              "GET",
-              "/api/projects/@current/feature_flags/my_flags?groups=" + groups + "&temporary_token=" + temporaryToken,
-              null,
-              JsonNull.INSTANCE,
-              true,
-              Optional.of(future)
+            PosthogRequest.OTHER,
+            "GET",
+            "/api/projects/@current/feature_flags/my_flags?groups=" + groups + "&temporary_token=" + temporaryToken,
+            null,
+            JsonNull.INSTANCE,
+            true,
+            Optional.of(future)
         ));
 
         return future.thenApplyAsync(element -> {

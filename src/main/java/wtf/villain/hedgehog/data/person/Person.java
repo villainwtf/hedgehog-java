@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Getter
-@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
+@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType", "LombokSetterMayBeUsed"})
 public class Person {
 
     @NotNull
@@ -29,6 +29,7 @@ public class Person {
     private Optional<FeatureFlagCollection> storedFeatureFlags;
 
     private Optional<String> clientIp;
+    private boolean alwaysIncludePropertiesInEvents = false;
 
     protected Person(@NotNull String distinctId,
                      @NotNull Optional<Map<String, JsonElement>> properties,
@@ -41,6 +42,10 @@ public class Person {
 
     public void setClientIp(@NotNull String clientIp) {
         this.clientIp = Optional.of(clientIp);
+    }
+
+    public void setAlwaysIncludePropertiesInEvents(boolean alwaysIncludePropertiesInEvents) {
+        this.alwaysIncludePropertiesInEvents = alwaysIncludePropertiesInEvents;
     }
 
     @ApiStatus.Internal

@@ -13,7 +13,8 @@ public class PosthogClientBuilder {
     private Optional<String> apiKey = Optional.empty();
     private Optional<RequestModifier> requestModifier = Optional.empty();
 
-    protected PosthogClientBuilder() {}
+    protected PosthogClientBuilder() {
+    }
 
     @Contract("_ -> this")
     @NotNull

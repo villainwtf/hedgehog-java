@@ -12,9 +12,9 @@ public interface IdentifyRequest {
     @ApiStatus.Internal
     static void identify(@NotNull PosthogClient posthog, @NotNull Person person) {
         Event.builder()
-              .name("$identify")
-              .build()
-              .enqueue(person, posthog);
+            .name("$identify")
+            .build()
+            .enqueue(person, posthog);
     }
 
 }
