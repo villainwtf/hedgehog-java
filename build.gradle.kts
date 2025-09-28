@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     java
     `maven-publish`
-    id("com.gradleup.shadow") version("9.1.0")
+    id("com.gradleup.shadow") version ("9.1.0")
 }
 
 group = "wtf.villain"
@@ -32,9 +32,6 @@ tasks.withType<ShadowJar> {
     archiveClassifier.set("")
 
     minimizeJar = true
-
-    enableAutoRelocation = true
-    relocationPrefix = "wtf.villain.hedgehog.vendored"
 }
 
 publishing {
@@ -45,6 +42,18 @@ publishing {
             groupId = project.group.toString()
             artifactId = project.name
             version = project.version.toString()
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/villainwtf/hedgehog-java")
+
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }
