@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     java
-    `maven-publish`
+    id("com.vanniktech.maven.publish") version "0.34.0"
     id("com.gradleup.shadow") version ("9.1.0")
 }
 
@@ -34,26 +34,39 @@ tasks.withType<ShadowJar> {
     minimizeJar = true
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            artifact(tasks.named<ShadowJar>("shadowJar"))
+mavenPublishing {
+    publishToMavenCentral()
+    signAllPublications()
 
-            groupId = project.group.toString()
-            artifactId = project.name
-            version = project.version.toString()
-        }
-    }
+    coordinates(project.group.toString(), project.name, project.version.toString())
 
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/villainwtf/hedgehog-java")
+    pom {
+        name.set(project.name)
+        description.set("A Java library for interacting with the Posthog API.")
 
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+        inceptionYear.set("2024")
+        url.set("https://github.com/villainwtf/hedgehog-java/")
+
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("http://www.opensource.org/licenses/mit-license.php")
+                distribution.set("http://www.opensource.org/licenses/mit-license.php")
             }
+        }
+
+        developers {
+            developer {
+                id.set("villain")
+                name.set("Villain developers")
+                url.set("https://github.com/villainwtf")
+            }
+        }
+
+        scm {
+            url.set("https://github.com/villainwtf/hedgehog-java")
+            connection.set("scm:git:git://github.com/villainwtf/hedgehog-java.git")
+            developerConnection.set("scm:git:ssh://git@github.com/villainwtf/hedgehog-java.git")
         }
     }
 }

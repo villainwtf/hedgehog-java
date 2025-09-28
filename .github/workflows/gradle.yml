@@ -3,11 +3,10 @@ name: CI Build & Publish
 on:
   workflow_dispatch:
   push:
-    branches: ["*"]
+    branches: [ "*" ]
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   build:
@@ -24,7 +23,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
       - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
-      - name: Publish package to GitHub Packages
-        run: ./gradlew publish
+      - name: Setup GPG
+        run: |
+          echo "${{ secrets.PGP_BINARY_PRIVATE_KEY }}" | base64 -d > private.key
+      - name: Publish package to Maven Central
+        run: |
+          ./gradlew clean publishToMavenCentral --no-build-cache --no-daemon --stacktrace --no-parallel \
+            -Psigning.secretKeyRingFile=$PWD/private.key \
+            -Psigning.keyId=${{ secrets.PGP_KEY_ID }} \
+            -Psigning.password=${{ secrets.PGP_PASSWORD }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
