@@ -28,7 +28,7 @@ jobs:
           echo "${{ secrets.PGP_BINARY_PRIVATE_KEY }}" | base64 -d > private.key
       - name: Publish package to Maven Central
         run: |
-          ./gradlew clean publishToMavenCentral --no-build-cache --no-daemon --stacktrace --no-parallel \
+          ./gradlew clean build shadowJar publishToMavenCentral --no-build-cache --no-daemon --stacktrace --no-parallel \
             -Psigning.secretKeyRingFile=$PWD/private.key \
             -Psigning.keyId=${{ secrets.PGP_KEY_ID }} \
             -Psigning.password=${{ secrets.PGP_PASSWORD }}

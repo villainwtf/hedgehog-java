@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "wtf.villain"
-version = runCommand("git", "rev-parse", "--short", "HEAD") ?: "0.0.0"
+version = "1.0.0"
 
 java {
     toolchain {
@@ -29,8 +29,6 @@ dependencies {
 }
 
 tasks.withType<ShadowJar> {
-    archiveClassifier.set("")
-
     minimizeJar = true
 }
 
@@ -38,7 +36,11 @@ mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
 
-    coordinates(project.group.toString(), project.name, project.version.toString())
+    coordinates(
+        groupId = project.group.toString(),
+        artifactId = project.name,
+        version = project.version.toString()
+    )
 
     pom {
         name.set(project.name)
@@ -68,17 +70,5 @@ mavenPublishing {
             connection.set("scm:git:git://github.com/villainwtf/hedgehog-java.git")
             developerConnection.set("scm:git:ssh://git@github.com/villainwtf/hedgehog-java.git")
         }
-    }
-}
-
-private fun runCommand(vararg command: String): String? {
-    return try {
-        val output = providers.exec {
-            commandLine(*command)
-        }
-
-        output.standardOutput.asText.get().trim()
-    } catch (_: Throwable) {
-        null
     }
 }
