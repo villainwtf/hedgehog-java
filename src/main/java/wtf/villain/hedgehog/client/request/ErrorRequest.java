@@ -2,10 +2,12 @@ package wtf.villain.hedgehog.client.request;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnknownNullability;
 import wtf.villain.hedgehog.client.PosthogClient;
 import wtf.villain.hedgehog.client.api.PosthogServerFeature;
 import wtf.villain.hedgehog.data.error.Error;
+import wtf.villain.hedgehog.data.error.StackFrameData;
 import wtf.villain.hedgehog.data.event.Event;
 import wtf.villain.hedgehog.data.person.Person;
 import wtf.villain.hedgehog.util.Json;
@@ -33,7 +35,7 @@ public interface ErrorRequest {
             error = modified;
         }
 
-        var event = buildEvent(error, posthog.has(PosthogServerFeature.EXCEPTION_JAVA_FRAME));
+        var event = buildEvent(posthog, error);
         return EventRequest.captureEvent(posthog, event, person);
     }
 
@@ -52,12 +54,12 @@ public interface ErrorRequest {
             error = modified;
         }
 
-        var event = buildEvent(error, posthog.has(PosthogServerFeature.EXCEPTION_JAVA_FRAME));
+        var event = buildEvent(posthog, error);
         EventRequest.enqueueEvent(posthog, event, person);
     }
 
     @NotNull
-    private static Event buildEvent(@NotNull Error error, boolean hasJavaFrame) {
+    private static Event buildEvent(@NotNull PosthogClient posthog, @NotNull Error error) {
         return Event.builder()
             .name("$exception")
             .properties(error.properties() == null ? Map.of() : error.properties())
@@ -67,8 +69,9 @@ public interface ErrorRequest {
 
                     for (var throwable = error.throwable(); throwable != null; throwable = throwable.getCause()) {
                         array.add(buildThrowable(
+                            posthog,
+                            error,
                             throwable,
-                            hasJavaFrame,
                             error.isHandled(),
                             error.isSynthetic(),
                             depth
@@ -82,8 +85,9 @@ public interface ErrorRequest {
     }
 
     @NotNull
-    private static Json buildThrowable(@NotNull Throwable throwable,
-                                       boolean hasJavaFrame,
+    private static Json buildThrowable(@NotNull PosthogClient posthog,
+                                       @NotNull Error error,
+                                       @NotNull Throwable throwable,
                                        boolean isHandled,
                                        boolean isSynthetic,
                                        int depth) {
@@ -107,19 +111,36 @@ public interface ErrorRequest {
 
             .add("stacktrace", Json.builder()
                 .add("type", "raw")
-                .add("frames", buildFrames(hasJavaFrame, throwable.getStackTrace()))
+                .add("frames", buildFrames(posthog, error, throwable, throwable.getStackTrace()))
             );
     }
 
+    @Nullable
+    private static StackFrameData getStackFrameData(@NotNull PosthogClient posthog,
+                                                    @NotNull Error error,
+                                                    @NotNull Throwable throwable,
+                                                    @NotNull StackTraceElement element) {
+        var modifier = posthog.errorModifier();
+        if (modifier != null) {
+            return modifier.enrichStackFrame(error, throwable, element);
+        }
+        return null;
+    }
+
     @NotNull
-    private static JsonArrayBuilder buildFrames(boolean hasJavaFrame, @UnknownNullability StackTraceElement @NotNull [] elements) {
+    private static JsonArrayBuilder buildFrames(@NotNull PosthogClient posthog,
+                                                @NotNull Error error,
+                                                @NotNull Throwable throwable,
+                                                @UnknownNullability StackTraceElement @NotNull [] elements) {
         return Json.array()
             .use(array -> {
                 for (int i = elements.length - 1; i >= 0; i--) {
                     var element = elements[i];
                     if (element == null) continue;
 
-                    if (hasJavaFrame) {
+                    var data = getStackFrameData(posthog, error, throwable, element);
+
+                    if (posthog.has(PosthogServerFeature.EXCEPTION_JAVA_FRAME)) {
                         array.add(Json.builder()
                             .add("platform", "java")
                             .use(json -> {
@@ -140,9 +161,13 @@ public interface ErrorRequest {
                                     json.add("module", element.getClassName());
                                 }
 
-                                // TODO: can we have the user pass these in somehow?
-                                //  - `in_app`: whether the frame is part of application or library code
-                                //  - `map_id`: proguard mapping symbol identifier
+                                if (data != null) {
+                                    json.add("in_app", data.isInApp());
+                                }
+
+                                if (data != null && data.mappingSymbolId() != null && !data.mappingSymbolId().isBlank()) {
+                                    json.add("map_id", data.mappingSymbolId());
+                                }
                             })
                             .build());
                     } else {
@@ -169,8 +194,9 @@ public interface ErrorRequest {
                                     json.add("module", element.getClassName());
                                 }
 
-                                // TODO: can we have the user pass these in somehow?
-                                //  - `in_app`: whether the frame is part of application or library code
+                                if (data != null) {
+                                    json.add("in_app", data.isInApp());
+                                }
                             })
                             .build());
                     }
