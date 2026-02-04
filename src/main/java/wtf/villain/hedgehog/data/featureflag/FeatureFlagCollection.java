@@ -8,8 +8,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
-@SuppressWarnings({"unused"})
+@SuppressWarnings({ "unused" })
 public record FeatureFlagCollection(@NotNull Map<String, FeatureFlag> flags) {
+
+    @NotNull
+    public static FeatureFlagCollection empty() {
+        return new FeatureFlagCollection(Map.of());
+    }
 
     public void forEach(@NotNull BiConsumer<String, FeatureFlag> action) {
         flags.forEach(action);

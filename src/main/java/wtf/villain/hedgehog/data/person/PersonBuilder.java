@@ -6,20 +6,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
+@SuppressWarnings("unused")
 public class PersonBuilder {
 
-    private Optional<String> distinctId = Optional.empty();
+    private String distinctId;
     private final Map<String, JsonElement> properties = new HashMap<>();
-    private Optional<String> clientIp = Optional.empty();
+    private String clientIp;
     private boolean alwaysIncludePropertiesInEvents = false;
 
     @Contract("_ -> this")
     @NotNull
     public PersonBuilder distinctId(@NotNull String distinctId) {
-        this.distinctId = Optional.of(distinctId);
+        this.distinctId = distinctId;
         return this;
     }
 
@@ -40,7 +39,7 @@ public class PersonBuilder {
     @Contract("_ -> this")
     @NotNull
     public PersonBuilder clientIp(@NotNull String clientIp) {
-        this.clientIp = Optional.of(clientIp);
+        this.clientIp = clientIp;
         return this;
     }
 
@@ -53,11 +52,13 @@ public class PersonBuilder {
 
     @NotNull
     public Person build() {
-        var distinctId = this.distinctId.orElseThrow(() -> new IllegalStateException("Distinct ID is required"));
+        if (this.distinctId == null || this.distinctId.isBlank()) {
+            throw new IllegalStateException("Distinct ID is required");
+        }
 
         var person = new Person(
             distinctId,
-            properties.isEmpty() ? Optional.empty() : Optional.of(properties),
+            properties,
             clientIp
         );
 

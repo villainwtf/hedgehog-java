@@ -6,19 +6,18 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
+@SuppressWarnings("unused")
 public class EventBuilder {
 
-    private Optional<String> name = Optional.empty();
+    private String name;
     private final Map<String, JsonElement> properties = new HashMap<>();
     private boolean isIdentify = false;
 
     @Contract("_ -> this")
     @NotNull
     public EventBuilder name(@NotNull String name) {
-        this.name = Optional.of(name);
+        this.name = name;
 
         if ("$identify".equals(name)) {
             isIdentify = true;
@@ -50,11 +49,13 @@ public class EventBuilder {
 
     @NotNull
     public Event build() {
-        var name = this.name.orElseThrow(() -> new IllegalStateException("Event name must be set"));
+        if (this.name == null || this.name.isBlank()) {
+            throw new IllegalStateException("Event name must be set");
+        }
 
         return new Event(
             name,
-            properties.isEmpty() ? Optional.empty() : Optional.of(properties),
+            properties,
             isIdentify
         );
     }

@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import wtf.villain.hedgehog.client.PosthogClient;
 import wtf.villain.hedgehog.client.internal.PosthogRequest;
 import wtf.villain.hedgehog.client.internal.QueuedRequest;
+import wtf.villain.hedgehog.client.modifier.ResponseHandler;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlag;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagCollection;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagData;
@@ -25,6 +26,11 @@ public interface FeatureFlagRequest {
     @ApiStatus.Internal
     @NotNull
     static CompletableFuture<FeatureFlagCollection> evaluateFeatureFlags(@NotNull PosthogClient posthog, @NotNull Person person) {
+        if (person.isAnonymous()) {
+            // short circuit for anonymous users. this is mostly used for testing purposes
+            return CompletableFuture.completedFuture(FeatureFlagCollection.empty());
+        }
+
         var json = Json.builder()
             .add("api_key", posthog.apiKey())
             .add("distinct_id", person.distinctId())
@@ -39,7 +45,7 @@ public interface FeatureFlagRequest {
             PosthogRequest.EVALUATE_FEATURE_FLAGS,
             json,
             true,
-            Optional.of(future)
+            ResponseHandler.jsonFuture(future)
         ));
 
         return future.thenApplyAsync(element -> {

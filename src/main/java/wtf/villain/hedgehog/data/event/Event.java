@@ -1,20 +1,21 @@
 package wtf.villain.hedgehog.data.event;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import lombok.Getter;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import wtf.villain.hedgehog.client.PosthogClient;
 import wtf.villain.hedgehog.data.person.Person;
 import wtf.villain.hedgehog.data.person.PropertyFilter;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Getter
-@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType"})
+@SuppressWarnings("unused")
 public class Event {
 
     @NotNull
@@ -23,11 +24,11 @@ public class Event {
     }
 
     private final String name;
-    private final Optional<Map<String, JsonElement>> properties;
+    private final Map<String, JsonElement> properties;
     private final boolean isIdentify;
 
     protected Event(@NotNull String name,
-                    @NotNull Optional<Map<String, JsonElement>> properties,
+                    @Nullable Map<String, JsonElement> properties,
                     boolean isIdentify) {
         this.name = name;
         this.properties = properties;
@@ -47,14 +48,22 @@ public class Event {
     @NotNull
     public Map<String, JsonElement> buildProperties(@NotNull Person person) {
         var properties = new HashMap<String, JsonElement>();
-        this.properties.ifPresent(properties::putAll);
 
-        var personEventProperties = person.buildProperties(PropertyFilter.create()
-            .includePersonProperties(isIdentify || person.alwaysIncludePropertiesInEvents())
-            .useSetSyntax(isIdentify)
-            .includeIp(true)
-            .includeFeatureFlags(true));
-        properties.putAll(personEventProperties);
+        if (this.properties != null) {
+            properties.putAll(this.properties);
+        }
+
+        if (person.isAnonymous()) {
+            properties.put("$process_person_profile", new JsonPrimitive(false));
+        } else {
+            var personEventProperties = person.buildProperties(PropertyFilter.create()
+                .includePersonProperties(isIdentify || person.alwaysIncludePropertiesInEvents())
+                .useSetSyntax(isIdentify)
+                .includeIp(true)
+                .includeFeatureFlags(true));
+
+            properties.putAll(personEventProperties);
+        }
 
         return properties;
     }

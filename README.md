@@ -21,6 +21,7 @@ Please note the following important points:
 - [x] Identify users
 - [x] Capture events
 - [x] Capture events in batch
+- [x] Error tracking
 - [x] Record page views
 - [x] Record screen views
 - [x] Evaluate feature flags
@@ -34,3 +35,5 @@ Please note the following important points:
 ## Additional Features
 
 - [x] Hook that allows modifying each http request before it is sent
+- [x] Hook that allows inspecting each http response after it is received
+- [x] Hook that allows modifying each exception before it is sent

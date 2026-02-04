@@ -9,13 +9,13 @@ import org.jetbrains.annotations.NotNull;
 import wtf.villain.hedgehog.client.PosthogClient;
 import wtf.villain.hedgehog.client.internal.PosthogRequest;
 import wtf.villain.hedgehog.client.internal.QueuedRequest;
+import wtf.villain.hedgehog.client.modifier.ResponseHandler;
 import wtf.villain.hedgehog.data.earlyaccess.EarlyAccessFeature;
 import wtf.villain.hedgehog.data.event.Event;
 import wtf.villain.hedgehog.data.person.Person;
 import wtf.villain.hedgehog.util.Json;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
@@ -60,7 +60,7 @@ public interface EarlyAccessRequest {
             "?api_key=" + posthog.apiKey(),
             JsonNull.INSTANCE,
             true,
-            Optional.of(future)
+            ResponseHandler.jsonFuture(future)
         ));
 
         return future.thenApplyAsync(element -> {

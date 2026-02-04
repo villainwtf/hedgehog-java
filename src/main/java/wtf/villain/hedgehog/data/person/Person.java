@@ -6,16 +6,34 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import wtf.villain.hedgehog.data.featureflag.FeatureFlagCollection;
 import wtf.villain.hedgehog.util.Json;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Getter
-@SuppressWarnings({"unused", "OptionalUsedAsFieldOrParameterType", "LombokSetterMayBeUsed"})
+@SuppressWarnings("unused")
 public class Person {
+
+    private static final String ANONYMOUS_DISTINCT_ID = "$hedgehog_anonymous";
+
+    private static final Person UNIDENTIFIED_PERSON = new Person(
+        ANONYMOUS_DISTINCT_ID,
+        null,
+        null
+    );
+
+    @NotNull
+    public static Person unidentified() {
+        return UNIDENTIFIED_PERSON;
+    }
+
+    @NotNull
+    public static Person person(@NotNull String distinctId) {
+        return new Person(distinctId, null, null);
+    }
 
     @NotNull
     public static PersonBuilder builder() {
@@ -23,29 +41,32 @@ public class Person {
     }
 
     private final String distinctId;
-    private final Optional<Map<String, JsonElement>> properties;
+    private final Map<String, JsonElement> properties;
 
     @Setter
-    private Optional<FeatureFlagCollection> storedFeatureFlags;
+    private FeatureFlagCollection storedFeatureFlags;
 
-    private Optional<String> clientIp;
+    private String clientIp;
     private boolean alwaysIncludePropertiesInEvents = false;
 
     protected Person(@NotNull String distinctId,
-                     @NotNull Optional<Map<String, JsonElement>> properties,
-                     @NotNull Optional<String> clientIp) {
+                     @Nullable Map<String, JsonElement> properties,
+                     @Nullable String clientIp) {
         this.distinctId = distinctId;
         this.properties = properties;
-        this.storedFeatureFlags = Optional.empty();
         this.clientIp = clientIp;
     }
 
     public void setClientIp(@NotNull String clientIp) {
-        this.clientIp = Optional.of(clientIp);
+        this.clientIp = clientIp;
     }
 
     public void setAlwaysIncludePropertiesInEvents(boolean alwaysIncludePropertiesInEvents) {
         this.alwaysIncludePropertiesInEvents = alwaysIncludePropertiesInEvents;
+    }
+
+    public boolean isAnonymous() {
+        return ANONYMOUS_DISTINCT_ID.equals(this.distinctId);
     }
 
     @ApiStatus.Internal
@@ -53,23 +74,21 @@ public class Person {
     public Map<String, JsonElement> buildProperties(@NotNull PropertyFilter filter) {
         var properties = new HashMap<String, JsonElement>();
 
-        if (filter.includePersonProperties()) {
-            this.properties.ifPresent(props -> {
-                if (filter.useSetSyntax()) {
-                    properties.put("$set", Json.of(props));
-                } else {
-                    properties.putAll(props);
-                }
-            });
+        if (filter.includePersonProperties() && this.properties != null) {
+            if (filter.useSetSyntax()) {
+                properties.put("$set", Json.of(this.properties));
+            } else {
+                properties.putAll(this.properties);
+            }
         }
 
-        if (filter.includeIp()) {
-            clientIp.ifPresent(ip -> properties.put("$ip", new JsonPrimitive(ip)));
+        if (filter.includeIp() && this.clientIp != null) {
+            properties.put("$ip", new JsonPrimitive(this.clientIp));
         }
 
-        if (filter.includeFeatureFlags()) {
-            storedFeatureFlags.ifPresent(flags -> {
-                flags.forEach((key, value) -> properties.put("$feature/" + key, new JsonPrimitive(value.variantAsString())));
+        if (filter.includeFeatureFlags() && this.storedFeatureFlags != null) {
+            this.storedFeatureFlags.forEach((key, value) -> {
+                properties.put("$feature/" + key, new JsonPrimitive(value.variantAsString()));
             });
         }
 

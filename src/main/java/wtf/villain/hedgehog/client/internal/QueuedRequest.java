@@ -3,10 +3,9 @@ package wtf.villain.hedgehog.client.internal;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import wtf.villain.hedgehog.client.modifier.ResponseHandler;
 
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
 public record QueuedRequest(@NotNull PosthogRequest request,
@@ -15,14 +14,13 @@ public record QueuedRequest(@NotNull PosthogRequest request,
                             @Nullable String endpointExtension,
                             @NotNull JsonElement body,
                             boolean immediate,
-                            @NotNull Optional<CompletableFuture<JsonElement>> responseFuture) {
+                            @Nullable ResponseHandler handler) {
 
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     public QueuedRequest(@NotNull PosthogRequest request,
                          @NotNull JsonElement body,
                          boolean immediate,
-                         @NotNull Optional<CompletableFuture<JsonElement>> responseFuture) {
-        this(request, null, null, null, body, immediate, responseFuture);
+                         @Nullable ResponseHandler handler) {
+        this(request, null, null, null, body, immediate, handler);
 
         if (request.method() == null || request.endpoint() == null) {
             throw new IllegalArgumentException("PosthogRequest must have a method and endpoint defined.");
@@ -32,7 +30,7 @@ public record QueuedRequest(@NotNull PosthogRequest request,
     public QueuedRequest(@NotNull PosthogRequest request,
                          @NotNull JsonElement body,
                          boolean immediate) {
-        this(request, body, immediate, Optional.empty());
+        this(request, body, immediate, null);
     }
 
     @NotNull

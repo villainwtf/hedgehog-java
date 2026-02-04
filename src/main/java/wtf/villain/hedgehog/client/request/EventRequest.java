@@ -6,12 +6,12 @@ import org.jetbrains.annotations.NotNull;
 import wtf.villain.hedgehog.client.PosthogClient;
 import wtf.villain.hedgehog.client.internal.PosthogRequest;
 import wtf.villain.hedgehog.client.internal.QueuedRequest;
+import wtf.villain.hedgehog.client.modifier.ResponseHandler;
 import wtf.villain.hedgehog.data.event.Event;
 import wtf.villain.hedgehog.data.person.Person;
 import wtf.villain.hedgehog.util.Json;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,15 +33,16 @@ public interface EventRequest {
     static CompletableFuture<Void> captureEvent(@NotNull PosthogClient posthog, @NotNull Event event, @NotNull Person person) {
         var eventJson = getEventJson(posthog, event, person);
 
-        var future = new CompletableFuture<JsonElement>();
+        var future = new CompletableFuture<Void>();
 
         posthog.queueWorker().enqueue(new QueuedRequest(
             PosthogRequest.CAPTURE_EVENT,
             eventJson,
             true,
-            Optional.of(future)));
+            ResponseHandler.simpleFuture(future)
+        ));
 
-        return future.thenApplyAsync(json -> null);
+        return future;
     }
 
     @ApiStatus.Internal

@@ -8,10 +8,10 @@ import org.jetbrains.annotations.NotNull;
 import wtf.villain.hedgehog.client.PosthogClient;
 import wtf.villain.hedgehog.client.internal.PosthogRequest;
 import wtf.villain.hedgehog.client.internal.QueuedRequest;
+import wtf.villain.hedgehog.client.modifier.ResponseHandler;
 import wtf.villain.hedgehog.data.toolbar.ToolbarFeatureFlag;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("unused")
@@ -28,7 +28,7 @@ public interface ToolbarRequest {
             null,
             JsonNull.INSTANCE,
             true,
-            Optional.of(future)
+            ResponseHandler.jsonFuture(future)
         ));
 
         return future.thenApplyAsync(element -> {
