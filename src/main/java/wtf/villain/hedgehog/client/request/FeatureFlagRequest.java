@@ -1,6 +1,5 @@
 package wtf.villain.hedgehog.client.request;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +48,7 @@ public interface FeatureFlagRequest {
         ));
 
         return future.thenApplyAsync(element -> {
-            var response = new Gson().fromJson(element, PartialFeatureFlagResponse.class);
+            var response = posthog.gson().fromJson(element, PartialFeatureFlagResponse.class);
 
             if (response.errorComputingFlags) {
                 throw new RuntimeException("Error computing feature flags");

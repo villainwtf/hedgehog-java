@@ -1,5 +1,6 @@
 package wtf.villain.hedgehog.client;
 
+import com.google.gson.Gson;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +33,8 @@ public class PosthogClient {
     private final String apiKey;
     private final EnumSet<PosthogServerFeature> serverFeatures;
 
+    private final Gson gson;
+
     private final QueueWorker queueWorker;
 
     private volatile RequestModifier requestModifier;
@@ -43,8 +46,11 @@ public class PosthogClient {
                             @NotNull EnumSet<PosthogServerFeature> serverFeatures) {
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
-        this.queueWorker = new QueueWorker(this);
         this.serverFeatures = serverFeatures;
+
+        this.gson = new Gson();
+
+        this.queueWorker = new QueueWorker(this);
     }
 
     /**

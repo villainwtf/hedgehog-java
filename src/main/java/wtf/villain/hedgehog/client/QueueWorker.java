@@ -5,6 +5,7 @@ import okhttp3.*;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import wtf.villain.hedgehog.client.error.PosthogRequestCancelledException;
 import wtf.villain.hedgehog.client.error.PosthogRequestException;
 import wtf.villain.hedgehog.client.internal.PosthogRequest;
 import wtf.villain.hedgehog.client.internal.QueuedRequest;
@@ -126,6 +127,10 @@ public class QueueWorker {
     }
 
     private void dispatchRequest(@NotNull QueuedRequest request, @Nullable CompletableFuture<Void> dispatchFuture) {
+        var handler = request.handler() == null
+            ? posthogClient.defaultResponseHandler()
+            : request.handler();
+
         var method = request.method();
         var url = posthogClient.baseUrl() + "/" + request.endpoint();
 
@@ -145,15 +150,18 @@ public class QueueWorker {
             httpRequestBuilder = modifier.modify(httpRequestBuilder);
 
             if (httpRequestBuilder == null) {
+                if (handler != null) {
+                    handler.onError(request, new PosthogRequestCancelledException());
+                }
+
+                if (dispatchFuture != null) {
+                    dispatchFuture.complete(null);
+                }
                 return;
             }
         }
 
         var httpRequest = httpRequestBuilder.build();
-
-        var handler = request.handler() == null
-            ? posthogClient.defaultResponseHandler()
-            : request.handler();
 
         client.newCall(httpRequest).enqueue(new Callback() {
             @Override

@@ -1,6 +1,5 @@
 package wtf.villain.hedgehog.client.request;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import org.jetbrains.annotations.ApiStatus;
@@ -32,7 +31,7 @@ public interface ToolbarRequest {
         ));
 
         return future.thenApplyAsync(element -> {
-            var response = new Gson().fromJson(element, ToolbarFeatureFlag[].class);
+            var response = posthog.gson().fromJson(element, ToolbarFeatureFlag[].class);
             return List.of(response);
         });
     }

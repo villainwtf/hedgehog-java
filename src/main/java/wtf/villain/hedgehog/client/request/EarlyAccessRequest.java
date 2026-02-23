@@ -1,6 +1,5 @@
 package wtf.villain.hedgehog.client.request;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonPrimitive;
@@ -64,7 +63,7 @@ public interface EarlyAccessRequest {
         ));
 
         return future.thenApplyAsync(element -> {
-            var json = new Gson().fromJson(element, PartialEarlyAccessFeaturesResponse.class);
+            var json = posthog.gson().fromJson(element, PartialEarlyAccessFeaturesResponse.class);
             return json.earlyAccessFeatures;
         });
     }
